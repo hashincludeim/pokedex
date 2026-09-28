@@ -32,6 +32,13 @@ export function formatName(slug: string): string {
   return SPECIAL_NAMES[slug] ?? titleCase(slug);
 }
 
+/** Label for a species' variety: "charizard-mega-x" on species "charizard" → "Mega X". */
+export function formLabel(varietyName: string, speciesName: string, isDefault: boolean): string {
+  if (isDefault && varietyName === speciesName) return 'Default';
+  const suffix = varietyName.startsWith(`${speciesName}-`) ? varietyName.slice(speciesName.length + 1) : varietyName;
+  return titleCase(suffix);
+}
+
 export function formatId(id: number): string {
   return `#${String(id).padStart(4, '0')}`;
 }

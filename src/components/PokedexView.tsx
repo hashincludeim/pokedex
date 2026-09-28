@@ -1,23 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { DexEntry } from '../lib/api';
 import { useDex } from '../lib/DexContext';
-import { GENERATIONS, formatName } from '../lib/format';
+import { DEFAULT_FILTERS, applyFilters, type DexFilters, type SortKey } from '../lib/filters';
+import { GENERATIONS } from '../lib/format';
 import { TYPES, type TypeName } from '../lib/types';
 import { CloseIcon, SearchIcon } from './Icons';
 import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
 import { ErrorState } from './States';
 import { TypeBadge } from './TypeBadge';
-
-export type SortKey = 'id-asc' | 'id-desc' | 'name-asc' | 'name-desc';
-
-export interface DexFilters {
-  query: string;
-  types: TypeName[];
-  gen: number; // 0 = all generations
-  sort: SortKey;
-}
-
-export const DEFAULT_FILTERS: DexFilters = { query: '', types: [], gen: 0, sort: 'id-asc' };
 
 const PAGE_SIZE = 60;
 
@@ -27,34 +16,6 @@ const SORTS: { value: SortKey; label: string }[] = [
   { value: 'name-asc', label: 'Name A–Z' },
   { value: 'name-desc', label: 'Name Z–A' },
 ];
-
-const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-
-function applyFilters(entries: DexEntry[], { query, types, gen, sort }: DexFilters): DexEntry[] {
-  const q = query.trim().replace(/^#/, '');
-  const isNumber = /^\d+$/.test(q);
-  const needle = normalize(q);
-  const generation = GENERATIONS.find((g) => g.id === gen);
-
-  const results = entries.filter((e) => {
-    if (generation && (e.id < generation.start || e.id > generation.end)) return false;
-    if (types.length && !types.every((t) => e.types.includes(t))) return false;
-    if (!q) return true;
-    if (isNumber) return String(e.id).startsWith(String(Number(q)));
-    return normalize(e.name).includes(needle) || normalize(formatName(e.name)).includes(needle);
-  });
-
-  switch (sort) {
-    case 'id-desc':
-      return results.sort((a, b) => b.id - a.id);
-    case 'name-asc':
-      return results.sort((a, b) => a.name.localeCompare(b.name));
-    case 'name-desc':
-      return results.sort((a, b) => b.name.localeCompare(a.name));
-    default:
-      return results;
-  }
-}
 
 interface PokedexViewProps {
   filters: DexFilters;

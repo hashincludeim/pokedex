@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { english, fetchJSON, latestEnglish, type Ability, type NamedResource, type Pokemon, type Species } from '../lib/api';
 import { useDex } from '../lib/DexContext';
-import { artworkUrl, cleanFlavorText, formatId, formatName, generationOf, titleCase } from '../lib/format';
+import { applyFilters, neighbors, type DexFilters } from '../lib/filters';
+import { artworkUrl, cleanFlavorText, formLabel, formatId, formatName, generationOf, titleCase } from '../lib/format';
 import { useAsync } from '../lib/hooks';
 import { closePokemon, navigate } from '../lib/router';
 import { isTypeName, type TypeName } from '../lib/types';
@@ -23,19 +24,14 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'evolution', label: 'Evolution' },
 ];
 
-/** "charizard-mega-x" on species "charizard" → "Mega X" */
-function formLabel(varietyName: string, speciesName: string, isDefault: boolean): string {
-  if (isDefault && varietyName === speciesName) return 'Default';
-  const suffix = varietyName.startsWith(`${speciesName}-`) ? varietyName.slice(speciesName.length + 1) : varietyName;
-  return titleCase(suffix);
-}
-
-export function PokemonDetail({ id }: { id: number }) {
+export function PokemonDetail({ id, filters }: { id: number; filters: DexFilters }) {
   const { byId, data: dex } = useDex();
   const entry = byId.get(id);
-  const maxId = dex?.entries.at(-1)?.id ?? id;
-  const prevId = id > 1 ? id - 1 : null;
-  const nextId = id < maxId ? id + 1 : null;
+
+  // Step through the filtered list behind the modal when this Pokémon is in it; otherwise go by number.
+  const filteredIds = useMemo(() => (dex ? applyFilters(dex.entries, filters).map((e) => e.id) : []), [dex, filters]);
+  const allIds = useMemo(() => dex?.entries.map((e) => e.id) ?? [], [dex]);
+  const { prev: prevId, next: nextId } = neighbors(filteredIds.includes(id) ? filteredIds : allIds, id);
 
   const [tab, setTab] = useState<Tab>('about');
   const [shiny, setShiny] = useState(false);

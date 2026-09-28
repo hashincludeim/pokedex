@@ -16,12 +16,12 @@ interface Localized {
   language: NamedResource;
 }
 
-interface NamedList {
+export interface NamedList {
   count: number;
   results: NamedResource[];
 }
 
-interface TypeResponse {
+export interface TypeResponse {
   name: string;
   damage_relations: {
     double_damage_to: NamedResource[];
@@ -178,6 +178,13 @@ export async function loadDexData(): Promise<DexData> {
     Promise.all(TYPES.map((t) => fetchJSON<TypeResponse>(`type/${t}`))),
   ]);
 
+  const data = buildDexData(species, typeResponses);
+  writeCache(data);
+  return data;
+}
+
+/** Combine the species list and per-type responses into the index and the type chart. */
+export function buildDexData(species: NamedList, typeResponses: TypeResponse[]): DexData {
   const chart = {} as TypeChart;
   const typesById = new Map<number, TypeName[]>();
 
@@ -205,9 +212,7 @@ export async function loadDexData(): Promise<DexData> {
     })
     .sort((a, b) => a.id - b.id);
 
-  const data = { entries, chart };
-  writeCache(data);
-  return data;
+  return { entries, chart };
 }
 
 // ---------------------------------------------------------------------------
