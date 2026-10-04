@@ -2,6 +2,8 @@
 
 A Pokédex browser and type matchup calculator built with React, TypeScript and Vite, powered by [PokéAPI](https://pokeapi.co).
 
+**Live demo: [pokedex.hashimsalim.com](https://pokedex.hashimsalim.com/)**
+
 ## Features
 
 **Pokédex**
